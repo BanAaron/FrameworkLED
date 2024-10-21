@@ -25,4 +25,5 @@ brightness: int (0,100) value of the target brightness
 
 # todo
 add restore method to restore the state of the LEDs to what was captured by getCurrentState()
+
 add RGB color mixing

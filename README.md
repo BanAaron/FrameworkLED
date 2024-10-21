@@ -1,5 +1,5 @@
 # frameworkLedDriverPython
-a python module to control the LEDs on the framework 13 laptop
+a python module to control the LEDs on the Framework laptop 13
 
 # methods
 

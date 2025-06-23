@@ -1,113 +1,62 @@
-bl = "/sys/class/leds/chromeos::kbd_backlight/brightness"
-caps = "/sys/class/leds/input2::capslock/brightness"
-rightCol = "/sys/class/leds/chromeos:multicolor:right/multi_intensity"
-rightBri = "/sys/class/leds/chromeos:multicolor:right/brightness"
-leftCol = "/sys/class/leds/chromeos:multicolor:left/multi_intensity"
-leftBri = "/sys/class/leds/chromeos:multicolor:left/brightness"
-powerCol = "/sys/class/leds/chromeos:multicolor:power/multi_intensity"
-powerBri = "/sys/class/leds/chromeos:multicolor:power/brightness"
-
-def getCurrentState():
-    fullSet = []
-    for i in [bl, caps, rightCol, rightBri, leftCol, leftBri, powerCol, powerBri]:
-        file = open(i,"r")
-        fullSet.append(file.read())
-        file.close()
-    return(fullSet)
-
-def setKbBrightness(brightness):
-    brightness = int(brightness)
-    if brightness >= 0:
-        if brightness <=100:
-            
-            file = open(bl, "w+")
-            file.write(str(brightness))
-            file.close()
-
-def setPowerBrightness(brightness):
-    brightness = int(brightness)
-    if brightness >= 0:
-        if brightness <=100:
-            
-            file = open(powerBri, "w+")
-            file.write(str(brightness))
-            file.close()
+from dataclasses import dataclass
+from enum import StrEnum
+from os import path
 
 
-def setCapsBrightness(brightness):
-    brightness = int(brightness)
-    if brightness >= 0:
-        if brightness <= 1:
-            file = open(caps, "w+")
-            file.write(str(brightness))
-            file.close()
+class LEDPaths(StrEnum):
+    backlight_brightness = "/sys/class/leds/chromeos::kbd_backlight/brightness"
+    capslock = "/sys/class/leds/input2::capslock/brightness"
+    power_button_brightness = "/sys/class/leds/chromeos:multicolor:power/brightness"
+    power_button_color = "/sys/class/leds/chromeos:multicolor:power/multi_intensity"
+    rightCol = "/sys/class/leds/chromeos:multicolor:right/multi_intensity"
+    rightBri = "/sys/class/leds/chromeos:multicolor:right/brightness"
+    leftCol = "/sys/class/leds/chromeos:multicolor:left/multi_intensity"
+    leftBri = "/sys/class/leds/chromeos:multicolor:left/brightness"
 
-def setCol(led, color, intensity):
-    if led == "left":
-        path = leftCol
-    if led == "right":
-        path = rightCol
-    if led == "power":
-        path = powerCol 
-    
-    if intensity <= 100 and intensity >=0:
-        file = open(path,"w+")
 
-        colorFilter = ["red","green","blue","yellow","white","amber"]
-        colorWriteList = [0,0,0,0,0,0]
-        index = 0
-        for i in colorFilter:
-            if i == color:
-                colorWriteList[index] = intensity
-                break
-            index += 1
-        colorString = ""
-        for i in colorWriteList:
-            colorString+=(str(i) + " ")
-        file.write(colorString)
-        file.close()
+class Brightness(int):
+    def __new__(cls, value=100):
+        if value < 0:
+            return 0
+        elif value > 100:
+            return 100
+        return value
 
-def setSideBrightness(led, brightness):
-    if led == "right":
-        path = rightBri
-    if led == "left":
-        path = leftBri
-    brightness = int(brightness)
-    if brightness <= 1 and brightness >= 0:
-        file = open(path, "w+")
-        file.write(str(brightness))
-        file.close()
+
+@dataclass
+class Colour:
+    red: int = 0
+    green: int = 0
+    blue: int = 0
+    yellow: int = 0
+    white: int = 0
+    amber: int = 0
+
+    def __post_init__(self):
+        if sum(self.__dict__.values()) == 0:
+            self.white = 100
+
+    def __str__(self):
+        return f"{self.red} {self.green} {self.blue} {self.yellow} {self.white} {self.amber}"
+
+
+def write_value(sys_path: str, value: Brightness | Colour) -> str:
+    if not path.exists(sys_path):
+        raise Exception(f"Path does not exist: {sys_path}")
+    with open(sys_path, "w") as write_file:
+        write_file.write(str(value))
+    with open(sys_path, "r") as read_file:
+        res = read_file.read()
+    return res
+
+
+def set_brightness(sys_path: str, brightness: Brightness) -> str:
+    return write_value(sys_path, brightness)
+
+
+def set_colour(sys_path: str, colour: Colour) -> str:
+    return write_value(sys_path, colour)
+
 
 if __name__ == "__main__":
-    import time
-    import colorsys
-    setCol("right","red",100)
-    setCol("left","green",100)
-    setCol("power","white",100)
-    print(getCurrentState())
-    while True:
-        for i in range(3):
-            setKbBrightness(100)
-            setCapsBrightness(1)
-            setSideBrightness("right",1)
-            setSideBrightness("left",1)
-            setPowerBrightness(100)
-            time.sleep(1)
-            setKbBrightness(0)
-            setCapsBrightness(0)
-            setSideBrightness("right",0)
-            setSideBrightness("left",0)
-            setPowerBrightness(0)
-            time.sleep(1)
-        setSideBrightness("right",1)
-        setSideBrightness("left",1)
-        setPowerBrightness(100)
-        cl=["red","green","blue","yellow","white","amber"]
-        for i in range(5):
-            setCol("right",cl[i],100)
-            setCol("left",cl[i],100)
-            setCol("power",cl[i],100)
-            setKbBrightness(int(((i+1)*1/6)*100))
-            time.sleep(0.5)
-        setCol("left","white",100)
-        setCol("right","white",100)
+    pass

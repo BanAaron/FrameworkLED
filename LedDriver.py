@@ -4,14 +4,14 @@ from os import path
 
 
 class LEDPaths(StrEnum):
-    backlight_brightness = "/sys/class/leds/chromeos::kbd_backlight/brightness"
+    keyboard_backlight = "/sys/class/leds/chromeos::kbd_backlight/brightness"
     capslock = "/sys/class/leds/input2::capslock/brightness"
     power_button_brightness = "/sys/class/leds/chromeos:multicolor:power/brightness"
     power_button_color = "/sys/class/leds/chromeos:multicolor:power/multi_intensity"
-    rightCol = "/sys/class/leds/chromeos:multicolor:right/multi_intensity"
-    rightBri = "/sys/class/leds/chromeos:multicolor:right/brightness"
-    leftCol = "/sys/class/leds/chromeos:multicolor:left/multi_intensity"
-    leftBri = "/sys/class/leds/chromeos:multicolor:left/brightness"
+    charging_indicator_right_colour = "/sys/class/leds/chromeos:multicolor:right/multi_intensity"
+    charging_indicator_right_brightness = "/sys/class/leds/chromeos:multicolor:right/brightness"
+    charging_indicator_left_colour = "/sys/class/leds/chromeos:multicolor:left/multi_intensity"
+    charging_indicator_left_brightness = "/sys/class/leds/chromeos:multicolor:left/brightness"
 
 
 class Brightness(int):
@@ -38,6 +38,13 @@ class Colour:
 
     def __str__(self):
         return f"{self.red} {self.green} {self.blue} {self.yellow} {self.white} {self.amber}"
+
+
+def get_state(sys_path: str) -> list[str]:
+    with open(sys_path, "r") as read_file:
+        return read_file.read().split(
+            " "
+        )
 
 
 def write_value(sys_path: str, value: Brightness | Colour) -> str:
